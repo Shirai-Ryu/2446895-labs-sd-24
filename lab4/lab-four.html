@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Country Information</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    article {
+        display: inline-block;
+        width: 45%;
+        margin: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    input[type="text"] {
+        padding: 10px;
+        font-size: 16px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    .error {
+        color: red;
+    }
+    ul {
+        margin: 0;
+        padding: 0;
+    }
+    li {
+        list-style: none;
+        margin-bottom: 5px;
+    }
+    .country-flag {
+        width: 30px;
+        margin-right: 10px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Country Information</h2>
+<article>
+    <input type="text" id="countryInput" placeholder="Enter a country name">
+    <button onclick="fetchCountryInfo()">Get Country Info</button>
+    <p id="error" class="error"></p>
+    <h3 id="countryName"></h3>
+    <p id="capital"></p>
+    <p id="population"></p>
+    <p id="region"></p>
+    <img id="countryFlag" src="" alt="" width="100">
+</article>
+
+<article>
+    <h3>Bordering Countries</h3>
+    <ul id="borderCountries"></ul>
+</article>
+
+<script>
+function fetchCountryInfo() {
+    const input = document.getElementById('countryInput').value.trim();
+    if (input === '') {
+        document.getElementById('error').textContent = 'Please enter a country name.';
+        return;
+    }
+
+    fetch(`https://restcountries.com/v3.1/name/${input}`)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Country not found.');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const country = data[0];
+        const { capital, population, region, flags, borders } = country;
+
+        document.getElementById('error').textContent = '';
+        document.getElementById('countryName').textContent = input;
+        document.getElementById('capital').textContent = `Capital: ${capital}`;
+        document.getElementById('population').textContent = `Population: ${population}`;
+        document.getElementById('region').textContent = `Region: ${region}`;
+        document.getElementById('countryFlag').src = flags.png;
+
+        let borderCountriesInfo = '';
+        if (borders) {
+            borders.forEach(border => {
+                fetch(`https://restcountries.com/v3.1/alpha/${border}`)
+                .then(response => response.json())
+                .then(borderData => {
+                    borderCountriesInfo += `<li><img class="country-flag" src="${borderData[0].flags.png}" alt="${borderData[0].name.common} flag">${borderData[0].name.common}</li>`;
+                    document.getElementById('borderCountries').innerHTML = borderCountriesInfo;
+                })
+                .catch(error => {
+                    console.error('Error fetching border country data:', error);
+                });
+            });
+        } else {
+            document.getElementById('borderCountries').innerHTML = '<li>No bordering countries</li>';
+        }
+    })
+    .catch(error => {
+        document.getElementById('error').textContent = error.message;
+    });
+}
+</script>
+
+</body>
+</html>
